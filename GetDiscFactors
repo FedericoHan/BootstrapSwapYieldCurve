@@ -1,0 +1,87 @@
+'''implementation of "forward_substitution" from https://en.wikipedia.org/wiki/Bootstrapping_(finance)
+Namely extracting discount_factors from market traded yield curve instruments, which are futures and deposits up to 1year,
+and interest (IRS) or overnight indexed swaps (OIS).
+
+Key concept on a fixed IRS, fair value is 0 at start, via no-arbitrage argument, assuming a notional of $1 
+
+1year_IRS:  disc_factor1* ($1 + coup_1) = $1   
+2year_IRS:  disc_factor1 * coup_2 + disc_factor2*($1 + coup_2) = $1
+3year_IRS:  disc_factor1 * coup_3 + disc_factor2 * coup3 + disc_factor3 * ($1 + coup_3) = $1
+
+
+Variation of Chapter5 from James WeiMing "Mastering Python For Finance"   '''
+
+
+import math
+
+class GetDiscFactors(object):
+   
+    def __init__(self):
+        
+        self.instr = {}  #populated using add_instr() method
+        self.disc_factors = {}
+       
+    def add_instr(self, par , T, coup, price , freq = 1): 
+        
+        #par and price only relevant for eurodollar futures, on IRS or OIS = $1 for both
+       
+        self.instr[T] = (par, coup, price, freq)
+       
+        '''dictionary with keys: T years grouping of tuples for vals:
+            {0.25: (1, 0.0, 0.9849, 1),
+             0.5: (1, 0.0, 0.9837, 1),
+             1: (1, 0.013855, 1, 1),
+             2: (1, 0.015271, 1, 1),
+             3: (1, 0.01622, 1, 1)}
+             and so forth'''
+   
+    def sort_instr(self):
+       
+        sort_dict = sorted(self.instr.keys())
+        return sort_dict
+    
+    def get_df(self):
+        
+        self.__get_shortdated_df__()
+        self.__get_longdated_df__()
+   
+    def __get_shortdated_df__(self):
+        
+        '''Say eurodolly future price is 98.46 and there are 62days to next IMM date.
+        thus yield is 1.54% p.a., thus disc_factor will be 1/(1+1.54%*62/360)  '''
+        
+        for T in self.instr:
+           
+            (par, coup, price, freq) = self.instr[T]  #without this: NameError: name 'coup' is not defined
+            
+            if coup == 0:
+                self.disc_factors[T] = 1.0 / (1.0 + (1.0 - price)*T)
+                #print(self.disc_factors.values())
+    
+    def __get_longdated_df__(self):
+       
+        #for T in self.instr:  #goes from 0.25, 0.50 straight to 2 skipping T = 1
+        for T in self.sort_instr():
+            
+            #(par, coup, price, freq) = self.instr[T]
+            instrument = self.instr[T]
+            (par, coup, price, freq) = instrument  #without this; NameError: name 'coup' is not defined
+           
+            
+            #this procedure will start at T = 1yrs
+            if coup != 0:
+                #self.disc_factors[T] = self.__helper_bootstrap__(self, T, instrument) #takes 3 positional args, 4 given
+                self.disc_factors[T] = self.__helper_bootstrap__(T, instrument) 
+                
+    def __helper_bootstrap__(self, T, instrument):
+
+        for i in range(int(T)):
+            sum_coup = 0
+            (par, coup, price, freq) = instrument #without this; NameError: name 'coup' is not defined
+            
+            for k in range(i):
+                sum_coup += self.disc_factors[i] * coup       
+        disc_factor = (1.0 - sum_coup) / (1 + coup)
+       
+        return disc_factor
+               
