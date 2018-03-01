@@ -1,8 +1,9 @@
 # BootstrapSwapCurve: derive discount factors (and zero rates) from interest rates swaps
 
-Part 1 of 2 uses Bloomberg API with TIA wrapper to download USD Interest Rate Swaps (IRS) up to 30 years. I've taken yearly coupons, Act/360 instead of semi-annual 30/360, for simplicity.
+Part 1 of 2 uses Bloomberg API with TIA wrapper to download USD Interest Rate Swaps (IRS) up to 30 years. I've taken yearly coupons, Act/360 instead of semi-annual 30/360, for simplicity.  
+If you do not have access to Bloomberg, can just type manually or try a different API (quandl?) to get the market yields.  
 
-Part 2 of 2 feeds creates a class object, wherein the data from above (it can be fed manually of course) is loaded 
+Part 2 of 2 creates a class object, wherein the data from Part 1 is loaded 
 unto a Python dictionary, and then discount factors (ie equivalent to zero-coupon bonds) and zero-rates are bootstrapped.  
 
 In essence, it's the ''implementation of "forward_substitution" from https://en.wikipedia.org/wiki/Bootstrapping_(finance)
@@ -20,5 +21,5 @@ Key concept on a fixed IRS, fair value is 0 at start, via no-arbitrage argument,
 
 Variation of Chapter5 from James WeiMing "Mastering Python For Finance" .
 
-This is a synopsys of what is done at work (minus of course a more proper daycount calendar but even without it, we get less than 2bps away on 30yrs, from BBG data) and, these days, collateral adjustments perhaps.  '''
+This is a synopsys of what is done by various pricers (minus of course a more proper daycount calendar but even without it, we get less than 2bps away on 30yrs, from BBG data) and, these days, collateral adjustments perhaps.  '''
 
